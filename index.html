@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Neon Wavelength - Team vs Monster</title>
+    <style>
+        :root {
+            --bg-color: #0a0a12;
+            --panel-bg: #121225;
+            --neon-cyan: #00f0ff;
+            --neon-magenta: #ff007f;
+            --neon-purple: #9d00ff;
+            --neon-green: #39ff14;
+            --text-color: #ffffff;
+            --text-muted: #8a8aab;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+            padding: 15px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            flex-grow: 1;
+        }
+
+        header {
+            text-align: center;
+            padding: 10px 0;
+        }
+
+        h1 {
+            font-size: 2rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: #fff;
+            text-shadow: 0 0 10px var(--neon-magenta), 0 0 20px var(--neon-purple);
+        }
+
+        .screen {
+            background: var(--panel-bg);
+            border: 2px solid var(--neon-purple);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 0 15px rgba(157, 0, 255, 0.2);
+            display: none;
+            flex-direction: column;
+            gap: 20px;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Utility Components */
+        .btn {
+            background: transparent;
+            border: 2px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.1);
+            text-align: center;
+        }
+
+        .btn:active, .btn:hover {
+            background: var(--neon-cyan);
+            color: var(--bg-color);
+            box-shadow: 0 0 20px var(--neon-cyan);
+        }
+
+        .btn-magenta {
+            border-color: var(--neon-magenta);
+            color: var(--neon-magenta);
+            box-shadow: 0 0 10px rgba(255, 0, 127, 0.1);
+        }
+
+        .btn-magenta:active, .btn-magenta:hover {
+            background: var(--neon-magenta);
+            color: var(--text-color);
+            box-shadow: 0 0 20px var(--neon-magenta);
+        }
+
+        input[type="text"] {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--text-muted);
+            border-radius: 8px;
+            padding: 12px;
+            color: #fff;
+            font-size: 1rem;
+            outline: none;
+            transition: border 0.2s;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+        }
+
+        /* Status Bar */
+        .stats-bar {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            margin-bottom: 5px;
+        }
+
+        .stat-box {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+
+        .stat-val {
+            font-size: 1.4rem;
+            font-weight: bold;
+        }
+
+        .monster-hp { color: var(--neon-magenta); text-shadow: 0 0 8px rgba(255, 0, 127, 0.4); }
+        .team-kp { color: var(--neon-green); text-shadow: 0 0 8px rgba(57, 255, 20, 0.4); }
+
+        /* Game Elements */
+        .spectrum-container {
+            position: relative;
+            width: 100%;
+            height: 160px;
+            background: #07070d;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .spectrum-track {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .target-zone {
+            position: absolute;
+            top: 0;
+            height: 100%;
+            background: linear-gradient(90deg, 
+                rgba(255, 0, 127, 0.2) 0%, 
+                rgba(0, 240, 255, 0.6) 40%, 
+                rgba(0, 240, 255, 1) 50%, 
+                rgba(0, 240, 255, 0.6) 60%, 
+                rgba(255, 0, 127, 0.2) 100%);
+            border-left: 2px solid var(--neon-magenta);
+            border-right: 2px solid var(--neon-magenta);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            opacity: 0;
+            pointer-events: none;
+            width: 16%; /* Abdeckung von ca. 16% der Gesamtbreite (+/- 8%) */
+        }
+
+        .spectrum-container.reveal .target-zone {
+            opacity: 1;
+        }
+
+        .team-pointer {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: #fff;
+            box-shadow: 0 0 12px #fff, 0 0 20px var(--neon-purple);
+            transform: translateX(-50%);
+            z-index: 5;
+        }
+
+        .dial-container {
+            padding: 10px 0;
+        }
+
+        .slider-input {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 12px;
+            background: #1a1a33;
+            border-radius: 6px;
+            outline: none;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .slider-input::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--neon-cyan);
+            border: 2px solid #fff;
+            box-shadow: 0 0 10px var(--neon-cyan);
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        .slider-input::-webkit-slider-thumb:active {
+            transform: scale(1.2);
+        }
+
+        .spectrum-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: -5px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
+
+        .label-left { color: var(--neon-magenta); text-align: left; width: 45%; }
+        .label-right { color: var(--neon-cyan); text-align: right; width: 45%; }
+
+        .phase-instruction {
+            text-align: center;
+            font-size: 1.1rem;
+            color: #fff;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .combat-log {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            border-left: 3px solid var(--neon-purple);
+            min-height: 50px;
+        }
+
+        /* Leaderboard Table */
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 0.85rem;
+        }
+
+        .history-table th, .history-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .history-table th {
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 1px;
+        }
+
+        .history-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .text-center { text-align: center !important; }
+        .text-right { text-align: right !important; }
+
+        .badge {
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+        .badge-success { background: rgba(57, 255, 24, 0.15); color: var(--neon-green); }
+        .badge-danger { background: rgba(255, 0, 127, 0.15); color: var(--neon-magenta); }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Wavelength</h1>
+        </header>
+
+        <div id="global-stats" class="stats-bar" style="display: none;">
+            <div class="stat-box">
+                <div class="stat-label">Monster HP</div>
+                <div id="global-monster-hp" class="stat-val monster-hp">35</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Team KP</div>
+                <div id="global-team-kp" class="stat-val team-kp">30</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Runde</div>
+                <div id="global-round" class="stat-val">1</div>
+            </div>
+        </div>
+
+        <div id="screen-setup" class="screen active">
+            <div class="phase-instruction">Spieler-Registrierung</div>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                <label style="font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase;">Name des Mediums für Runde 1</label>
+                <input type="text" id="input-medium-name" placeholder="Name eingeben...">
+            </div>
+            <button class="btn" id="btn-start-game">Spiel starten</button>
+        </div>
+
+        <div id="screen-medium" class="screen">
+            <div id="medium-title" class="phase-instruction">Medium-Phase</div>
+            
+            <div class="spectrum-labels">
+                <div id="med-label-left" class="label-left">Links</div>
+                <div id="med-label-right" class="label-right">Rechts</div>
+            </div>
+
+            <div class="spectrum-container reveal">
+                <div class="spectrum-track">
+                    <div id="med-target-zone" class="target-zone"></div>
+                </div>
+            </div>
+
+            <div class="combat-log" style="border-color: var(--neon-cyan);">
+                Gib deinem Team jetzt einen einzigen Hinweis, der die obige Position im Spektrum zwischen den beiden Gegensätzen beschreibt.
+            </div>
+
+            <button class="btn btn-magenta" id="btn-lock-medium">Hinweis gegeben - Handy übergeben</button>
+        </div>
+
+        <div id="screen-team" class="screen">
+            <div class="phase-instruction">Team-Phase</div>
+            
+            <div class="spectrum-labels">
+                <div id="team-label-left" class="label-left">Links</div>
+                <div id="team-label-right" class="label-right">Rechts</div>
+            </div>
+
+            <div class="spectrum-container" id="team-spectrum-container">
+                <div class="spectrum-track">
+                    <div id="team-target-zone" class="target-zone"></div>
+                    <div id="team-pointer" class="team-pointer" style="left: 50%;"></div>
+                </div>
+            </div>
+
+            <div class="dial-container">
+                <input type="range" id="team-slider" class="slider-input" min="0" max="100" value="50">
+            </div>
+
+            <div class="combat-log">
+                Diskutiert den Hinweis des Mediums und stellt das Rad auf die geschätzte Position ein.
+            </div>
+
+            <button class="btn" id="btn-reveal-result">Skala auflösen & angreifen</button>
+        </div>
+
+        <div id="screen-resolution" class="screen">
+            <div class="phase-instruction">Kampf-Auswertung</div>
+
+            <div class="spectrum-labels">
+                <div id="res-label-left" class="label-left">Links</div>
+                <div id="res-label-right" class="label-right">Rechts</div>
+            </div>
+
+            <div class="spectrum-container reveal">
+                <div class="spectrum-track">
+                    <div id="res-target-zone" class="target-zone"></div>
+                    <div id="res-pointer" class="team-pointer"></div>
+                </div>
+            </div>
+
+            <div id="resolution-log" class="combat-log">
+                Berechne Trefferwirkung...
+            </div>
+
+            <button class="btn" id="btn-next-round">Nächste Runde vorbereiten</button>
+        </div>
+
+        <div id="screen-gameover" class="screen">
+            <div id="gameover-title" class="phase-instruction" style="font-size: 1.5rem;">Spiel Beendet</div>
+            
+            <div id="gameover-log" class="combat-log" style="text-align: center; font-size: 1.1rem;">
+                Endstand-Meldung
+            </div>
+
+            <button class="btn" onclick="window.location.reload();">Neues Spiel starten</button>
+        </div>
+
+        <div id="panel-history" class="screen" style="padding: 15px; margin-top: -10px;">
+            <div style="font-size: 0.8rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: 1px;">Runden-Historie</div>
+            <div style="overflow-x: auto;">
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>Rd</th>
+                            <th>Medium</th>
+                            <th>Spektrum</th>
+                            <th class="text-center">Abw.</th>
+                            <th class="text-right">Effekt</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-tbody">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Datenbasis Gegensätze
+        const pairs = [
+            { left: "Eisbärkalt", right: "Vulkanheiß" },
+            { left: "Wertlos", right: "Unbezahlbar" },
+            { left: "Leise", right: "Gehörbetäubend" },
+            { left: "Sicher", right: "Lebensgefährlich" },
+            { left: "Schmutzig", right: "Steril rein" },
+            { left: "Lahm", right: "Lichtgeschwindigkeit" },
+            { left: "Diktatur", right: "Utopische Freiheit" },
+            { left: "Banal", right: "Kosmisch tiefgründig" },
+            { left: "Hässlich", right: "Atemberaubend schön" },
+            { left: "Einfach", right: "Extrem komplex" }
+        ];
+
+        // Spielstatus
+        let gameState = {
+            monsterHp: 35,
+            teamKp: 30,
+            currentRound: 1,
+            currentMedium: "",
+            currentTarget: 50, // Prozentwert 0-100
+            currentPair: null,
+            history: []
+        };
+
+        // DOM Elemente
+        const screens = {
+            setup: document.getElementById('screen-setup'),
+            medium: document.getElementById('screen-medium'),
+            team: document.getElementById('screen-team'),
+            resolution: document.getElementById('screen-resolution'),
+            gameover: document.getElementById('screen-gameover')
+        };
+
+        // Navigation
+        function showScreen(screenKey) {
+            Object.keys(screens).forEach(key => {
+                screens[key].classList.remove('active');
+            });
+            screens[screenKey].classList.add('active');
+            
+            // Stats-Bar und Historie anzeigen ab Spielstart
+            if (screenKey !== 'setup') {
+                document.getElementById('global-stats').style.display = 'flex';
+                document.getElementById('panel-history').style.display = 'flex';
+            } else {
+                document.getElementById('global-stats').style.display = 'none';
+                document.getElementById('panel-history').style.display = 'none';
+            }
+        }
+
+        // Stats UI updaten
+        function updateStatsUI() {
+            document.getElementById('global-monster-hp').textContent = gameState.monsterHp;
+            document.getElementById('global-team-kp').textContent = gameState.teamKp;
+            document.getElementById('global-round').textContent = gameState.currentRound;
+        }
+
+        // Generiere eine neue Runde
+        function initRound() {
+            // Zufälliges Paar wählen
+            const randomIndex = Math.floor(Math.random() * pairs.length);
+            gameState.currentPair = pairs[randomIndex];
+
+            // Zielbereich generieren (Zentrum zwischen 15% und 85%)
+            gameState.currentTarget = Math.floor(Math.random() * (85 - 15 + 1)) + 15;
+
+            // UI Beschriftungen setzen
+            document.getElementById('medium-title').textContent = "Medium: " + gameState.currentMedium;
+            
+            ['med', 'team', 'res'].forEach(prefix => {
+                document.getElementById(`${prefix}-label-left`).textContent = gameState.currentPair.left;
+                document.getElementById(`${prefix}-label-right`).textContent = gameState.currentPair.right;
+            });
+
+            // Target-Zonen positionieren (Breite ist 16%, Zentrum verschoben um -8% für perfekte Mitte)
+            ['med', 'team', 'res'].forEach(prefix => {
+                const zone = document.getElementById(`${prefix}-target-zone`);
+                zone.style.left = `${gameState.currentTarget}%`;
+                zone.style.transform = 'translateX(-50%)';
+            });
+
+            // Reset Slider und Zeiger
+            document.getElementById('team-slider').value = 50;
+            document.getElementById('team-pointer').style.left = '50%';
+            
+            // Vorbereitung Team-Skala (Klasse entfernen, um es unsichtbar zu machen)
+            document.getElementById('team-spectrum-container').classList.remove('reveal');
+
+            showScreen('medium');
+        }
+
+        // EVENT: Spiel starten
+        document.getElementById('btn-start-game').addEventListener('click', () => {
+            const nameInput = document.getElementById('input-medium-name');
+            if (!nameInput.value.trim()) {
+                alert("Bitte gib einen Namen für das erste Medium ein.");
+                return;
+            }
+            gameState.currentMedium = nameInput.value.trim();
+            updateStatsUI();
+            initRound();
+        });
+
+        // EVENT: Medium bestätigt Übergabe
+        document.getElementById('btn-lock-medium').addEventListener('click', () => {
+            showScreen('team');
+        });
+
+        // EVENT: Realtime Slider Anpassung
+        const teamSlider = document.getElementById('team-slider');
+        teamSlider.addEventListener('input', (e) => {
+            document.getElementById('team-pointer').style.left = `${e.target.value}%`;
+        });
+
+        // EVENT: Auflösung des Ergebnisses
+        document.getElementById('btn-reveal-result').addEventListener('click', () => {
+            const finalGuess = parseInt(teamSlider.value);
+            const target = gameState.currentTarget;
+            const deviation = Math.abs(finalGuess - target);
+
+            let damageToMonster = 0;
+            let damageToTeam = 0;
+            let resultMessage = "";
+
+            // Auswertung nach Abweichungskomponenten
+            if (deviation <= 2) {
+                damageToMonster = 10;
+                resultMessage = "Perfekter Volltreffer im Kern! Maximaler Schaden.";
+            } else if (deviation <= 5) {
+                damageToMonster = 6;
+                resultMessage = "Hervorragend gezielt! Schwerer Treffer.";
+            } else if (deviation <= 9) {
+                damageToMonster = 3;
+                resultMessage = "Guter Treffer im erweiterten Spektrum.";
+            } else {
+                // Weit daneben: Team verliert KP proportional zur Abweichung
+                damageToTeam = Math.min(15, Math.floor(deviation / 2));
+                resultMessage = "Weit gefehlt! Der Gegenangriff des Monsters trifft das Team hart.";
+            }
+
+            // Verrechnung
+            gameState.monsterHp = Math.max(0, gameState.monsterHp - damageToMonster);
+            gameState.teamKp = Math.max(0, gameState.teamKp - damageToTeam);
+
+            // Log für diesen Screen aufbauen
+            const logElement = document.getElementById('resolution-log');
+            logElement.innerHTML = `
+                <strong>Tipp:</strong> ${finalGuess}% | <strong>Ziel:</strong> ${target}% (Abweichung: ${deviation}%)<br><br>
+                ${resultMessage}<br>
+                Effekt: ${damageToMonster > 0 ? `+${damageToMonster} Schaden am Monster` : `-${damageToTeam} Team-KP`}
+            `;
+
+            // Pointer im Ergebnis-Screen setzen
+            document.getElementById('res-pointer').style.left = `${finalGuess}%`;
+
+            // Historie erweitern
+            const roundData = {
+                round: gameState.currentRound,
+                medium: gameState.currentMedium,
+                pair: `${gameState.currentPair.left} / ${gameState.currentPair.right}`,
+                deviation: deviation,
+                effect: damageToMonster > 0 ? `-${damageToMonster} HP` : `-${damageToTeam} KP`,
+                isPositive: damageToMonster > 0
+            };
+            gameState.history.push(roundData);
+            updateHistoryTable();
+
+            updateStatsUI();
+            showScreen('resolution');
+        });
+
+        // Historie-Tabelle aktualisieren
+        function updateHistoryTable() {
+            const tbody = document.getElementById('history-tbody');
+            tbody.innerHTML = "";
+            
+            // Neueste Einträge oben anzeigen
+            [...gameState.history].reverse().forEach(item => {
+                const tr = document.createElement('tr');
+                const badgeClass = item.isPositive ? 'badge-success' : 'badge-danger';
+                
+                tr.innerHTML = `
+                    <td>${item.round}</td>
+                    <td style="max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${item.medium}</td>
+                    <td style="font-size: 0.75rem; color: var(--text-muted);">${item.pair}</td>
+                    <td class="text-center">${item.deviation}%</td>
+                    <td class="text-right"><span class="badge ${badgeClass}">${item.effect}</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // EVENT: Nächste Runde oder Spielende ermitteln
+        document.getElementById('btn-next-round').addEventListener('click', () => {
+            if (gameState.monsterHp <= 0) {
+                showGameOver(true);
+                return;
+            }
+            if (gameState.teamKp <= 0) {
+                showGameOver(false);
+                return;
+            }
+
+            // Neues Medium abfragen
+            const nextMedium = prompt("Gib den Namen des nächsten Mediums ein:");
+            if (nextMedium && nextMedium.trim()) {
+                gameState.currentMedium = nextMedium.trim();
+            } else {
+                gameState.currentMedium = "Spieler " + (gameState.currentRound + 1);
+            }
+
+            gameState.currentRound += 1;
+            updateStatsUI();
+            initRound();
+        });
+
+        // Spielende-Bildschirm konfigurieren
+        function showGameOver(isVictory) {
+            const title = document.getElementById('gameover-title');
+            const log = document.getElementById('gameover-log');
+            
+            if (isVictory) {
+                title.textContent = "Sieg über das Monster";
+                title.style.textShadow = "0 0 10px var(--neon-green), 0 0 20px var(--neon-cyan)";
+                log.innerHTML = `Das Team hat das Monster erfolgreich bezwungen!<br><br>Verbleibende Team-KP: ${gameState.teamKp}<br>Benötigte Runden: ${gameState.currentRound}`;
+            } else {
+                title.textContent = "Niederlage";
+                title.style.textShadow = "0 0 10px var(--neon-magenta), 0 0 20px #ff0000";
+                log.innerHTML = `Eure Lebenspunkte sind auf 0 gesunken. Das Monster hat gewonnen.<br><br>Verbleibende HP des Monsters: ${gameState.monsterHp}`;
+            }
+            showScreen('gameover');
+        }
+    </script>
+</body>
+</html>
