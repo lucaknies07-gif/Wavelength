@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Wavelength - Full Edition</title>
+    <style>
+        :root { --bg-color: #06060e; --panel-bg: #0f1021; --neon-cyan: #00f0ff; --neon-magenta: #ff007f; --text-color: #fff; }
+        body { background-color: var(--bg-color); color: var(--text-color); font-family: sans-serif; display: flex; justify-content: center; padding: 20px; }
+        .container { width: 100%; max-width: 440px; position: relative; }
+        .main-panel { background: var(--panel-bg); border: 1px solid #1b1d3a; border-radius: 32px; padding: 28px; display: none; flex-direction: column; gap: 15px; }
+        .active { display: flex; }
+        .btn { background: linear-gradient(90deg, #9d00ff, var(--neon-magenta)); border: none; color: white; padding: 15px; border-radius: 14px; cursor: pointer; font-weight: bold; width: 100%; }
+        /* Toast-System */
+        #toast-box { position: absolute; top: 10px; width: 100%; background: var(--neon-magenta); padding: 15px; border-radius: 12px; text-align: center; display: none; z-index: 999; animation: slideDown 0.3s; }
+        @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        /* Game Over Animation */
+        .shutdown { animation: flicker 0.2s infinite, shrink 0.5s forwards; }
+        @keyframes flicker { 0% { opacity: 1; } 50% { opacity: 0.8; } 100% { opacity: 1; } }
+        @keyframes shrink { to { transform: scale(0); opacity: 0; } }
+        .spectrum-area { position: relative; height: 90px; border: 1px solid #1b1d3a; border-radius: 16px; margin: 10px 0; overflow: hidden; background: #030408; }
+        .target-zone-wrapper { position: absolute; top: 0; bottom: 0; width: 20%; transform: translateX(-50%); opacity: 0; transition: opacity 0.3s; }
+        .visible .target-zone-wrapper { opacity: 1; }
+    </style>
+</head>
+<body>
+
+<div class="container" id="game-container">
+    <div id="toast-box"></div>
+
+    <div id="scr-menu" class="main-panel active">
+        <h2 style="text-align:center; color:var(--neon-cyan);">WAVELENGTH</h2>
+        <div class="menu-card" onclick="setMode('pvp')">Kreis-Duell (PvP)</div>
+        <div class="menu-card" onclick="setMode('boss')">Bosskampf</div>
+    </div>
+
+    <div id="scr-setup" class="main-panel">
+        <input type="text" id="p-name" placeholder="Spielername..." style="padding:10px; border-radius:8px;">
+        <button class="btn" onclick="addPlayer()">Hinzufügen</button>
+        <div id="tag-box"></div>
+        <button class="btn" onclick="startEngine()">Start</button>
+    </div>
+
+    <div id="scr-medium" class="main-panel">
+        <div id="pair-text" style="text-align:center; font-weight:bold;"></div>
+        <div class="spectrum-area" id="spec-med">
+            <div class="target-zone-wrapper" id="zone-med" style="border-left:2px solid var(--neon-magenta); border-right:2px solid var(--neon-magenta);"></div>
+        </div>
+        <button class="btn" id="btn-reveal" onclick="reveal()">Zielbereich scannen</button>
+        <button class="btn" id="btn-pass" style="display:none;" onclick="pass()">Weiter</button>
+    </div>
+</div>
+
+<script>
+    let mode = '';
+    let players = [];
+    let gameState = { target: 50, hp: 100 };
+
+    function showToast(msg) {
+        const t = document.getElementById('toast-box');
+        t.textContent = msg; t.style.display = 'block';
+        setTimeout(() => t.style.display = 'none', 3000);
+    }
+
+    function setMode(m) { mode = m; document.getElementById('scr-menu').classList.remove('active'); document.getElementById('scr-setup').classList.add('active'); }
+
+    function addPlayer() {
+        const n = document.getElementById('p-name').value;
+        if(n) { players.push(n); document.getElementById('tag-box').innerHTML += `<div>${n}</div>`; document.getElementById('p-name').value=''; }
+    }
+
+    function startEngine() {
+        if(players.length < 2) return showToast("Mindestens 2 Spieler erforderlich!");
+        document.getElementById('scr-setup').classList.remove('active');
+        document.getElementById('scr-medium').classList.add('active');
+        setupRound();
+    }
+
+    function setupRound() {
+        document.getElementById('spec-med').classList.remove('visible');
+        document.getElementById('btn-reveal').style.display = 'block';
+        document.getElementById('btn-pass').style.display = 'none';
+        document.getElementById('zone-med').style.left = (Math.random()*80 + 10) + '%';
+    }
+
+    function reveal() {
+        document.getElementById('spec-med').classList.add('visible');
+        document.getElementById('btn-reveal').style.display = 'none';
+        document.getElementById('btn-pass').style.display = 'block';
+    }
+
+    function pass() {
+        // Hier geht es zum nächsten Screen...
+        gameState.hp -= 20;
+        if(gameState.hp <= 0) gameOver();
+        else setupRound();
+    }
+
+    function gameOver() {
+        const c = document.getElementById('game-container');
+        c.classList.add('shutdown');
+        setTimeout(() => {
+            c.innerHTML = `<h1 style="text-align:center; margin-top:50px;">SYSTEM CRASHED</h1><button class="btn" onclick="location.reload()">Reboot</button>`;
+        }, 500);
+    }
+</script>
+</body>
+</html>
