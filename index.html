@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Wavelength - Cyber Monster Hunt</title>
+    <style>
+        :root { --bg-color: #06060e; --panel-bg: #0f1021; --card-bg: #14162e; --neon-cyan: #00f0ff; --neon-magenta: #ff007f; --neon-purple: #9d00ff; --neon-green: #39ff14; --text-color: #ffffff; --text-muted: #646886; --border-color: #1b1d3a; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg-color); color: var(--text-color); min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .container { width: 100%; max-width: 440px; display: flex; flex-direction: column; gap: 15px; }
+        .main-panel { background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 32px; padding: 28px; display: none; flex-direction: column; animation: fadeIn 0.3s ease; }
+        .main-panel.active { display: flex; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .btn { background: linear-gradient(90deg, var(--neon-purple), var(--neon-magenta)); border: none; color: #fff; padding: 15px; border-radius: 14px; font-weight: 700; cursor: pointer; text-transform: uppercase; }
+        .spectrum-area { position: relative; width: 100%; height: 90px; background: #030408; border: 1px solid var(--border-color); border-radius: 16px; margin: 12px 0; overflow: hidden; }
+        .target-zone-wrapper { position: absolute; top: 0; bottom: 0; width: 20%; transform: translateX(-50%); opacity: 0; transition: opacity 0.4s ease; display: flex; justify-content: center; align-items: center; }
+        .spectrum-area.visible .target-zone-wrapper { opacity: 1; }
+        .zone-outer { position: absolute; left: 0; right: 0; top: 6px; bottom: 6px; border-left: 2px solid rgba(255, 0, 127, 0.3); border-right: 2px solid rgba(255, 0, 127, 0.3); }
+        .zone-center { position: absolute; left: 42%; right: 42%; top: 0; bottom: 0; background: linear-gradient(90deg, transparent, var(--neon-cyan), transparent); }
+        .user-pointer { position: absolute; top: 0; bottom: 0; width: 2px; background: #fff; z-index: 10; transform: translateX(-50%); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="scr-setup" class="main-panel active">
+        <div class="brand-title">Wavelength</div>
+        <button class="btn" onclick="startGame()">System hochfahren</button>
+    </div>
+
+    <div id="scr-secret" class="main-panel">
+        <div class="brand-subtitle">Phase 1: Geheim (Nur für Medium)</div>
+        <div class="spectrum-area visible">
+            <div class="target-zone-wrapper" id="zone-secret">
+                <div class="zone-outer"></div><div class="zone-center"></div>
+            </div>
+        </div>
+        <button class="btn" onclick="openTeamCalibration()">Signal an Team senden</button>
+    </div>
+
+    <div id="scr-team" class="main-panel">
+        <div class="brand-subtitle">Phase 2: Kalibrierung</div>
+        <div class="spectrum-area">
+            <div class="user-pointer" id="pointer-team" style="left: 50%;"></div>
+        </div>
+        <input type="range" class="custom-slider" id="guess-slider" min="0" max="100" value="50" oninput="movePointer(this.value)">
+        <button class="btn" onclick="revealResolution()">Laser abfeuern</button>
+    </div>
+
+    <div id="scr-result" class="main-panel">
+        <div class="spectrum-area visible">
+            <div class="target-zone-wrapper" id="zone-res"><div class="zone-outer"></div><div class="zone-center"></div></div>
+            <div class="user-pointer" id="pointer-res"></div>
+        </div>
+        <button class="btn" onclick="nextRound()">Nächste Runde</button>
+    </div>
+</div>
+
+<script>
+    let state = { targetVal: 50, monsterHp: 35 };
+    const pairs = [{ left: "Kalt", right: "Heiß" }];
+
+    function startGame() {
+        document.getElementById('scr-setup').classList.remove('active');
+        generateRound();
+    }
+
+    function generateRound() {
+        state.targetVal = Math.floor(Math.random() * 70) + 15;
+        document.getElementById('zone-secret').style.left = state.targetVal + '%';
+        document.getElementById('zone-res').style.left = state.targetVal + '%';
+        document.getElementById('scr-secret').classList.add('active');
+    }
+
+    function openTeamCalibration() {
+        document.getElementById('scr-secret').classList.remove('active');
+        document.getElementById('scr-team').classList.add('active');
+    }
+
+    function movePointer(val) { document.getElementById('pointer-team').style.left = val + '%'; }
+
+    function revealResolution() {
+        document.getElementById('scr-team').classList.remove('active');
+        document.getElementById('pointer-res').style.left = document.getElementById('guess-slider').value + '%';
+        document.getElementById('scr-result').classList.add('active');
+    }
+
+    function nextRound() {
+        document.getElementById('scr-result').classList.remove('active');
+        generateRound();
+    }
+</script>
+</body>
+</html>
