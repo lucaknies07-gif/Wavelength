@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>WAVELENGTH // Cyber Monster Hunt</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#080a14;
+    --bg-panel:#0d1120;
+    --bg-sub:#0a0d1a;
+    --line:#1c2440;
+    --cyan:#00e5ff;
+    --purple:#8f6bff;
+    --magenta:#ff2e88;
+    --amber:#ffb000;
+    --green:#39ff9d;
+    --text:#e8ecf5;
+    --dim:#7a84a8;
+    --danger:#ff3b3b;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background-color:var(--bg);
+    background-image:
+      radial-gradient(ellipse at 50% -10%, #131a33 0%, transparent 55%),
+      linear-gradient(rgba(120,140,255,0.08) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(120,140,255,0.08) 1px, transparent 1px);
+    background-size:auto, 34px 34px, 34px 34px;
+    color:var(--text);
+    font-family:'Share Tech Mono', monospace;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    overflow-x:hidden;
+  }
+  .scanlines{
+    pointer-events:none;
+    position:fixed; inset:0;
+    background:repeating-linear-gradient(to bottom, rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 1px, transparent 1px, transparent 3px);
+    z-index:50;
+    mix-blend-mode:overlay;
+  }
+  .app{
+    width:100%;
+    max-width:480px;
+    min-height:100vh;
+    position:relative;
+    padding:18px 16px 40px;
+    display:flex;
+    flex-direction:column;
+  }
+  h1,h2,h3{font-family:'Baloo 2', sans-serif; margin:0;}
+  .brand{
+    text-align:center;
+    margin-bottom:22px;
+  }
+  .brand .title{
+    font-family:'Baloo 2', sans-serif;
+    font-size:2.5rem; font-weight:800; letter-spacing:1px;
+    background:linear-gradient(90deg, var(--cyan) 0%, var(--purple) 50%, var(--magenta) 100%);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    filter:drop-shadow(0 0 16px rgba(143,107,255,0.35));
+  }
+  .brand .sub{
+    font-size:0.7rem; letter-spacing:4px; color:var(--dim);
+    margin-top:6px; text-transform:uppercase;
+  }
+  .brand .rule{
+    width:64px; height:3px; margin:12px auto 0; border-radius:3px;
+    background:linear-gradient(90deg, var(--cyan), var(--magenta));
+  }
+  .panel{
+    background:var(--bg-panel);
+    border:1px solid var(--line);
+    border-radius:28px;
+    padding:22px 20px;
+    position:relative;
+    animation:fadeIn 0.4s ease;
+    box-shadow:0 8px 30px rgba(0,0,0,0.5);
+  }
+  @keyframes fadeIn{
+    from{opacity:0; transform:translateY(6px);}
+    to{opacity:1; transform:translateY(0);}
+  }
+  .panel + .panel{margin-top:14px;}
+  .subpanel{
+    background:var(--bg-sub);
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:16px;
+    margin-bottom:16px;
+  }
+  label{
+    display:flex; align-items:center; gap:6px;
+    font-family:'Baloo 2', sans-serif; font-weight:700;
+    font-size:0.72rem; letter-spacing:2px; color:var(--cyan);
+    margin-bottom:10px; text-transform:uppercase;
+  }
+  label::before{content:"›"; color:var(--magenta); font-weight:800; font-size:1rem; line-height:1;}
+  input[type=text]{
+    width:100%;
+    background:#060810;
+    border:1px solid var(--line);
+    color:var(--text);
+    font-family:inherit;
+    padding:12px 14px;
+    border-radius:16px;
+    font-size:0.95rem;
+    outline:none;
+  }
+  input[type=text]:focus{border-color:var(--cyan); box-shadow:0 0 0 2px rgba(0,229,255,0.15);}
+  .row{display:flex; gap:8px; margin-bottom:8px; align-items:center;}
+  .row input{flex:1;}
+  .roster-list{display:flex; flex-direction:column; gap:8px; margin-top:4px;}
+  .roster-row{margin-bottom:0;}
+  .roster-chip{
+    flex:1;
+    background:#060810; border:1px solid var(--line); border-radius:14px;
+    padding:10px 14px; font-size:0.9rem; color:var(--text);
+  }
+  .icon-btn{
+    background-image:linear-gradient(var(--bg-sub),var(--bg-sub)), linear-gradient(135deg, var(--cyan), var(--magenta));
+    background-origin:border-box; background-clip:padding-box, border-box;
+    border:2px solid transparent;
+    border-radius:50%;
+    width:44px; height:44px; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+  }
+  .icon-btn .icon-plus, .icon-btn .icon-cross{margin:0; vertical-align:middle;}
+  button.btn{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:700;
+    letter-spacing:1px;
+    font-size:0.9rem;
+    text-transform:uppercase;
+    padding:15px 18px;
+    border-radius:18px;
+    border:2px solid var(--cyan);
+    background:var(--bg-sub);
+    color:var(--text);
+    cursor:pointer;
+    width:100%;
+    display:flex; align-items:center; justify-content:center;
+    transition:transform 0.12s ease, box-shadow 0.12s ease;
+  }
+  button.btn:active{transform:scale(0.98);}
+  button.btn:hover{box-shadow:0 0 18px rgba(0,229,255,0.3);}
+  button.btn.magenta{
+    border:2px solid transparent;
+    background-image:linear-gradient(var(--bg-sub),var(--bg-sub)), linear-gradient(90deg, var(--cyan), var(--purple), var(--magenta));
+    background-origin:border-box; background-clip:padding-box, border-box;
+    color:var(--text);
+  }
+  button.btn.magenta:hover{box-shadow:0 0 20px rgba(255,46,136,0.3);}
+  button.btn.ghost{background:transparent; color:var(--dim); border-color:var(--line); text-transform:none; font-size:0.85rem;}
+  button.btn:disabled{opacity:0.35; cursor:not-allowed; box-shadow:none;}
+  .stack{display:flex; flex-direction:column; gap:10px;}
+  .hint{font-size:0.72rem; color:var(--dim); margin-top:10px; line-height:1.5;}
+
+  /* Animated icon set */
+  .icon-face{width:52%; height:52%;}
+  .face-eye{animation:blink 3.2s ease-in-out infinite; transform-origin:center;}
+  @keyframes blink{0%,88%,100%{transform:scaleY(1);} 92%{transform:scaleY(0.15);}}
+  .icon-plus, .icon-cross{width:16px; height:16px; animation:iconPulse 2.6s ease-in-out infinite;}
+  .icon-plus{vertical-align:-3px; margin-right:7px;}
+  @keyframes iconPulse{0%,100%{opacity:1; transform:scale(1);} 50%{opacity:.7; transform:scale(1.1);}}
+  .icon-lock{width:15px; height:15px; vertical-align:-2.5px; color:var(--bg); animation:lockGlow 2.2s ease-in-out infinite;}
+  @keyframes lockGlow{0%,100%{filter:drop-shadow(0 0 0 currentColor);} 50%{filter:drop-shadow(0 0 3px currentColor);}}
+  .icon-sat{width:64px; height:64px; color:var(--cyan); filter:drop-shadow(0 0 8px rgba(0,229,255,0.5));}
+  .sat-ring{transform-origin:20px 20px; animation:satPulse 2.4s ease-out infinite;}
+  .sat-ring.r2{animation-delay:.6s;}
+  .sat-ring.r3{animation-delay:1.2s;}
+  @keyframes satPulse{0%{opacity:.9; transform:scale(.55);} 100%{opacity:0; transform:scale(1.15);}}
+  .icon-target{width:18px; height:18px; vertical-align:-4px; margin-right:7px;}
+  .icon-bolt{width:16px; height:16px; vertical-align:-3px; margin-left:5px; animation:boltFlicker 2.6s infinite;}
+  @keyframes boltFlicker{0%,90%,100%{opacity:1;} 93%{opacity:.35;} 96%{opacity:1;}}
+  .icon-trophy{width:74px; height:74px; color:var(--green); filter:drop-shadow(0 0 12px var(--green));}
+  .spark{animation:twinkle 1.6s ease-in-out infinite;}
+  .spark.s2{animation-delay:.4s;}
+  .spark.s3{animation-delay:.8s;}
+  @keyframes twinkle{0%,100%{opacity:.15;} 50%{opacity:1;}}
+  .icon-skull{width:74px; height:74px; color:var(--danger); filter:drop-shadow(0 0 12px var(--danger)); animation:glitchShake 2.6s infinite;}
+  @keyframes glitchShake{0%,88%,100%{transform:translate(0,0);} 90%{transform:translate(-2px,1px);} 92%{transform:translate(2px,-1px);} 94%{transform:translate(-1px,0);}}
+  .skull-eye{animation:eyeGlow 1.8s ease-in-out infinite;}
+  @keyframes eyeGlow{0%,100%{opacity:.4;} 50%{opacity:1;}}
+  @keyframes floatY{0%,100%{transform:translateY(0);} 50%{transform:translateY(-4px);}}
+  .icon-ball{width:60%; height:60%;}
+  .ball-spin{transform-origin:32px 32px; animation:spin 6s linear infinite;}
+  @keyframes spin{from{transform:rotate(0deg);} to{transform:rotate(360deg);}}
+  .icon-node{width:60%; height:60%;}
+  .node-dot{animation:nodePulse 2s ease-in-out infinite;}
+  @keyframes nodePulse{0%,100%{opacity:.4; r:3.4;} 50%{opacity:1; r:4.2;}}
+
+  /* Monster select */
+  .monster-card{
+    display:flex; gap:14px; align-items:center;
+    background:#0a0d1a; border:1px solid var(--line); border-radius:20px;
+    padding:14px; cursor:pointer; margin-bottom:12px;
+  }
+  .monster-card.selected{border-color:var(--magenta); box-shadow:0 0 14px rgba(255,46,136,0.25);}
+  .avatar{
+    width:58px; height:58px; border-radius:42% 58% 55% 45%/55% 42% 58% 45%; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    position:relative;
+    filter:drop-shadow(0 0 10px rgba(0,0,0,0.4));
+    animation:floatY 3.2s ease-in-out infinite;
+  }
+  .m-easy{background:linear-gradient(160deg,var(--green),#00b894); box-shadow:0 0 20px rgba(57,255,157,0.4);}
+  .m-medium{background:linear-gradient(160deg,var(--amber),#ff6a3d); box-shadow:0 0 20px rgba(255,176,0,0.4);}
+  .m-hard{background:linear-gradient(160deg,var(--cyan),var(--magenta)); box-shadow:0 0 20px rgba(255,46,136,0.4);}
+  .m-info{flex:1;}
+  .m-name{font-family:'Baloo 2',sans-serif; font-size:1rem; font-weight:700;}
+  .m-diff{font-size:0.62rem; letter-spacing:1px; text-transform:uppercase; margin-top:2px;}
+  .diff-Leicht{color:var(--green);}
+  .diff-Mittel{color:var(--amber);}
+  .diff-Schwer{color:var(--magenta);}
+  .m-desc{font-size:0.68rem; color:var(--dim); margin-top:4px; line-height:1.4;}
+  .m-hp{font-size:0.65rem; color:var(--dim); margin-top:4px;}
+
+  /* Battle HUD */
+  .hud{display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;}
+  .hud .round{font-size:0.65rem; color:var(--dim); letter-spacing:2px; text-transform:uppercase;}
+  .bar-wrap{margin-top:4px;}
+  .bar-label{display:flex; justify-content:space-between; font-size:0.62rem; color:var(--dim); margin-bottom:3px;}
+  .bar{height:10px; border-radius:10px; background:#0a0d1a; border:1px solid var(--line); overflow:hidden;}
+  .bar-fill{height:100%; transition:width 0.5s ease;}
+  .fill-hp{background:linear-gradient(90deg, var(--magenta), #ff7fb8);}
+  .fill-kp{background:linear-gradient(90deg, var(--cyan), #7fefff);}
+
+  .boss-box{text-align:center; margin:14px 0 18px;}
+  .boss-avatar{
+    width:110px; height:110px; margin:0 auto 10px;
+    border-radius:42% 58% 55% 45%/55% 42% 58% 45%;
+    display:flex; align-items:center; justify-content:center;
+    animation:pulseGlow 2.4s ease-in-out infinite, floatY 3.6s ease-in-out infinite;
+  }
+  @keyframes pulseGlow{
+    0%,100%{filter:brightness(1);}
+    50%{filter:brightness(1.35);}
+  }
+  .boss-name{font-family:'Baloo 2',sans-serif; font-size:1rem; letter-spacing:1px;}
+
+  /* Term pair display */
+  .terms{
+    display:flex; justify-content:space-between; align-items:center;
+    font-family:'Baloo 2',sans-serif; font-size:0.85rem; font-weight:700;
+    margin:16px 0 10px; letter-spacing:0.5px;
+  }
+  .terms .left{color:var(--cyan); text-align:left;}
+  .terms .right{color:var(--magenta); text-align:right;}
+
+  /* Frequency grid / slider */
+  .freq-grid{
+    position:relative; height:44px; border-radius:16px; overflow:hidden;
+    background:repeating-linear-gradient(90deg, #0c1122 0 1px, #0a0d1a 1px 20px);
+    border:1px solid var(--line);
+    margin-bottom:16px;
+  }
+  .target-zone{
+    position:absolute; top:0; bottom:0;
+    background:linear-gradient(180deg, rgba(255,176,0,0.55), rgba(255,176,0,0.15));
+    border-left:1px solid var(--amber); border-right:1px solid var(--amber);
+  }
+  .zone-band{position:absolute; top:0; bottom:0; opacity:0.9;}
+  .guess-marker{
+    position:absolute; top:-6px; width:3px; height:56px;
+    background:var(--cyan); box-shadow:0 0 8px var(--cyan);
+  }
+  input[type=range]{
+    width:100%; -webkit-appearance:none; appearance:none;
+    height:36px; background:transparent; margin:0;
+  }
+  input[type=range]::-webkit-slider-runnable-track{
+    height:6px; background:var(--line); border-radius:4px;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none; appearance:none;
+    width:22px; height:22px; margin-top:-8px; border-radius:50%;
+    background:var(--cyan); box-shadow:0 0 12px var(--cyan);
+    border:2px solid #06222b; cursor:pointer;
+  }
+  input[type=range]::-moz-range-track{height:6px; background:var(--line); border-radius:4px;}
+  input[type=range]::-moz-range-thumb{
+    width:22px; height:22px; border-radius:50%;
+    background:var(--cyan); box-shadow:0 0 12px var(--cyan); border:2px solid #06222b; cursor:pointer;
+  }
+
+  .clue-box{
+    background:#0a0d1a; border:1px dashed var(--line); border-radius:16px;
+    padding:12px; font-size:0.85rem; color:var(--text); margin-bottom:16px;
+    min-height:20px;
+  }
+  .clue-box .label{font-size:0.6rem; color:var(--dim); letter-spacing:1.5px; text-transform:uppercase; display:block; margin-bottom:5px;}
+
+  .secret-lock{
+    text-align:center; padding:30px 10px;
+  }
+  .secret-lock .glyph{font-size:2.4rem; margin-bottom:10px; filter:drop-shadow(0 0 10px var(--magenta));}
+  .secret-lock p{font-size:0.8rem; color:var(--dim); line-height:1.6;}
+
+  .feedback{
+    text-align:center; padding:20px 10px;
+  }
+  .feedback .fx{font-family:'Baloo 2',sans-serif; font-size:1.4rem; font-weight:900; letter-spacing:1px;}
+  .fx-critical{color:var(--green); text-shadow:0 0 14px var(--green);}
+  .fx-direct{color:var(--cyan); text-shadow:0 0 14px var(--cyan);}
+  .fx-graze{color:var(--amber); text-shadow:0 0 14px var(--amber);}
+  .fx-miss{color:var(--danger); text-shadow:0 0 14px var(--danger);}
+  .feedback .dmg{font-size:0.8rem; color:var(--dim); margin-top:6px;}
+
+  .history{margin-top:14px;}
+  .history-item{
+    display:flex; justify-content:space-between; font-size:0.68rem;
+    color:var(--dim); padding:6px 0; border-bottom:1px solid var(--line);
+  }
+  .history-item span.tag{font-weight:700;}
+
+  .endscreen{text-align:center; padding:30px 10px;}
+  .endscreen .glyph{font-size:3rem;}
+  .endscreen h2{margin-top:10px; letter-spacing:2px;}
+
+  .medium-tag{
+    display:inline-block; font-size:0.62rem; letter-spacing:1px; text-transform:uppercase;
+    color:var(--bg); background:var(--amber); padding:3px 8px; border-radius:20px; margin-bottom:10px;
+  }
+  .divider{height:1px; background:var(--line); margin:14px 0;}
+  .small-dim{font-size:0.65rem; color:var(--dim);}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="gradCM" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#00e5ff"/>
+      <stop offset="55%" stop-color="#8f6bff"/>
+      <stop offset="100%" stop-color="#ff2e88"/>
+    </linearGradient>
+  </defs>
+</svg>
+<div class="scanlines"></div>
+<div class="app" id="app"></div>
+
+<script>
+const THEMES = {
+  standard: {
+    id:"standard",
+    name:"Standard",
+    tagline:"Cyber Monster Hunt",
+    desc:"Klassischer Bosskampf-Modus mit Datenmonstern und Frequenz-Rätseln.",
+    iconKind:"hard",
+    termPairs: [
+      ["Eisbärkalt","Vulkanheiß"],
+      ["Schneckentempo","Lichtgeschwindigkeit"],
+      ["Flüstern","Donnergrollen"],
+      ["Federleicht","Bleischwer"],
+      ["Langweilig","Nervenkitzel"],
+      ["Winzig","Gigantisch"],
+      ["Chaos","Perfekte Ordnung"],
+      ["Geizhals","Verschwender"],
+      ["Stille Nacht","Wilde Party"],
+      ["Vorsichtig","Tollkühn"],
+      ["Retro","Zukunftsmusik"],
+      ["Peinlich","Episch"],
+      ["Trostlos","Paradiesisch"],
+      ["Steif","Elastisch"],
+      ["Unsichtbar","Grell"]
+    ],
+    monsters: [
+      {id:"glitch", name:"Neon Glitch", diff:"Leicht", hp:60, cls:"m-easy",
+       desc:"Ein instabiles Datenfragment, das flackernd durch die Leitungen huscht."},
+      {id:"wraith", name:"Static Wraith", diff:"Mittel", hp:90, cls:"m-medium",
+       desc:"Ein Geist aus weißem Rauschen, der sich von Fehlkalibrierungen nährt."},
+      {id:"omega", name:"Omega Mainframe", diff:"Schwer", hp:130, cls:"m-hard",
+       desc:"Der zentrale Serverkern — kalt, berechnend, gnadenlos."}
+    ]
+  },
+  fussball: {
+    id:"fussball",
+    name:"Fußball",
+    tagline:"Matchday Boss-Modus",
+    desc:"Frequenz-Duelle mit Fußball-Begriffen gegen taktische Gegner-Teams.",
+    iconKind:"ball",
+    termPairs: [
+      ["Abstiegskampf","Meistertitel"],
+      ["Schwalbe","Fairplay"],
+      ["Bankdrücker","Stammspieler"],
+      ["Geisterspiel","Hexenkessel"],
+      ["Catenaccio","Vollgasfußball"],
+      ["Notbremse","Blitzkonter"],
+      ["Underdog","Favorit"],
+      ["Winterpause","Englische Woche"],
+      ["Standardsituation","Traumtor"],
+      ["Abseitsfalle","Durchbruch"],
+      ["Ersatzbank","Startelf"],
+      ["Groundhopper","Couch-Potato"],
+      ["Derby-Krach","Freundschaftsspiel"],
+      ["Elfmeterheld","Elfmeterschreck"]
+    ],
+    monsters: [
+      {id:"united", name:"Underdog United", diff:"Leicht", hp:60, cls:"m-easy",
+       desc:"Frisch aufgestiegen, spielt aber ohne jede Angst nach vorne."},
+      {id:"bollwerk", name:"Bollwerk FC", diff:"Mittel", hp:90, cls:"m-medium",
+       desc:"Tiefstehende Abwehrkette, die jede Lücke sofort wieder schließt."},
+      {id:"serienmeister", name:"Serienmeister", diff:"Schwer", hp:130, cls:"m-hard",
+       desc:"Der Rekordchampion — abgezockt, physisch stark, eiskalt in Entscheidungen."}
+    ]
+  }
+};
+
+function currentTheme(){ return THEMES[state.theme] || THEMES.standard; }
+
+/* --- Animated inline SVG icon set (no emoji) --- */
+function svgMonsterFace(kind){
+  if(kind==='easy'){
+    return `
+    <svg viewBox="0 0 64 64" class="icon-face" aria-hidden="true">
+      <circle cx="23" cy="31" r="6.5" fill="#050914" class="face-eye"/>
+      <circle cx="41" cy="31" r="6.5" fill="#050914" class="face-eye" style="animation-delay:.25s"/>
+      <circle cx="25" cy="29" r="2" fill="#eafcff"/>
+      <circle cx="43" cy="29" r="2" fill="#eafcff"/>
+    </svg>`;
+  }
+  if(kind==='medium'){
+    return `
+    <svg viewBox="0 0 64 64" class="icon-face" aria-hidden="true">
+      <rect x="14" y="27" width="15" height="8" rx="4" fill="#050914" class="face-eye"/>
+      <rect x="35" y="27" width="15" height="8" rx="4" fill="#050914" class="face-eye" style="animation-delay:.25s"/>
+    </svg>`;
+  }
+  return `
+  <svg viewBox="0 0 64 64" class="icon-face" aria-hidden="true">
+    <path d="M13 24 L29 31 L13 36 Z" fill="#050914" class="face-eye"/>
+    <path d="M51 24 L35 31 L51 36 Z" fill="#050914" class="face-eye" style="animation-delay:.25s"/>
+  </svg>`;
+}
+function svgLock(){
+  return `
+  <svg viewBox="0 0 24 24" class="icon-lock" aria-hidden="true">
+    <rect x="5" y="11" width="14" height="9" rx="2.4" fill="none" stroke="currentColor" stroke-width="2"/>
+    <path d="M8 11V7a4 4 0 0 1 8 0v4" fill="none" stroke="currentColor" stroke-width="2"/>
+    <circle cx="12" cy="15.4" r="1.5" fill="currentColor"/>
+  </svg>`;
+}
+function svgSatellite(){
+  return `
+  <svg viewBox="0 0 40 40" class="icon-sat" aria-hidden="true">
+    <circle cx="20" cy="20" r="3" fill="currentColor"/>
+    <circle cx="20" cy="20" r="9" fill="none" stroke="currentColor" stroke-width="1.6" class="sat-ring r1"/>
+    <circle cx="20" cy="20" r="15" fill="none" stroke="currentColor" stroke-width="1.3" class="sat-ring r2"/>
+    <circle cx="20" cy="20" r="19" fill="none" stroke="currentColor" stroke-width="1" class="sat-ring r3"/>
+  </svg>`;
+}
+function svgTarget(){
+  return `
+  <svg viewBox="0 0 24 24" class="icon-target" aria-hidden="true">
+    <circle cx="12" cy="12" r="9" fill="none" stroke="url(#gradCM)" stroke-width="1.8"/>
+    <circle cx="12" cy="12" r="5" fill="none" stroke="url(#gradCM)" stroke-width="1.8"/>
+    <circle cx="12" cy="12" r="1.6" fill="url(#gradCM)"/>
+  </svg>`;
+}
+function svgBolt(){
+  return `<svg viewBox="0 0 24 24" class="icon-bolt" aria-hidden="true"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z" fill="url(#gradCM)"/></svg>`;
+}
+function svgPlus(){
+  return `
+  <svg viewBox="0 0 24 24" class="icon-plus" aria-hidden="true">
+    <line x1="12" y1="5" x2="12" y2="19" stroke="url(#gradCM)" stroke-width="2.6" stroke-linecap="round"/>
+    <line x1="5" y1="12" x2="19" y2="12" stroke="url(#gradCM)" stroke-width="2.6" stroke-linecap="round"/>
+  </svg>`;
+}
+function svgCross(){
+  return `
+  <svg viewBox="0 0 24 24" class="icon-cross" aria-hidden="true">
+    <line x1="6" y1="6" x2="18" y2="18" stroke="url(#gradCM)" stroke-width="2.6" stroke-linecap="round"/>
+    <line x1="18" y1="6" x2="6" y2="18" stroke="url(#gradCM)" stroke-width="2.6" stroke-linecap="round"/>
+  </svg>`;
+}
+function svgBall(){
+  return `
+  <svg viewBox="0 0 64 64" class="icon-ball" aria-hidden="true">
+    <circle cx="32" cy="32" r="22" fill="none" stroke="currentColor" stroke-width="2"/>
+    <g class="ball-spin">
+      <polygon points="32,20 39,25 36,33 28,33 25,25" fill="currentColor"/>
+      <line x1="32" y1="20" x2="32" y2="12" stroke="currentColor" stroke-width="1.6"/>
+      <line x1="39" y1="25" x2="46" y2="21" stroke="currentColor" stroke-width="1.6"/>
+      <line x1="36" y1="33" x2="40" y2="42" stroke="currentColor" stroke-width="1.6"/>
+      <line x1="28" y1="33" x2="24" y2="42" stroke="currentColor" stroke-width="1.6"/>
+      <line x1="25" y1="25" x2="18" y2="21" stroke="currentColor" stroke-width="1.6"/>
+    </g>
+  </svg>`;
+}
+function svgCyberNode(){
+  return `
+  <svg viewBox="0 0 64 64" class="icon-node" aria-hidden="true">
+    <circle cx="32" cy="32" r="6" fill="currentColor"/>
+    <circle cx="14" cy="18" r="3.4" fill="currentColor" class="node-dot"/>
+    <circle cx="50" cy="18" r="3.4" fill="currentColor" class="node-dot" style="animation-delay:.3s"/>
+    <circle cx="14" cy="46" r="3.4" fill="currentColor" class="node-dot" style="animation-delay:.6s"/>
+    <circle cx="50" cy="46" r="3.4" fill="currentColor" class="node-dot" style="animation-delay:.9s"/>
+    <line x1="32" y1="32" x2="14" y2="18" stroke="currentColor" stroke-width="1.4"/>
+    <line x1="32" y1="32" x2="50" y2="18" stroke="currentColor" stroke-width="1.4"/>
+    <line x1="32" y1="32" x2="14" y2="46" stroke="currentColor" stroke-width="1.4"/>
+    <line x1="32" y1="32" x2="50" y2="46" stroke="currentColor" stroke-width="1.4"/>
+  </svg>`;
+}
+function svgTrophy(){
+  return `
+  <svg viewBox="0 0 24 24" class="icon-trophy" aria-hidden="true">
+    <path d="M7 4h10v4a5 5 0 0 1-10 0V4z" fill="none" stroke="currentColor" stroke-width="1.5"/>
+    <path d="M7 5H4v2a3 3 0 0 0 3 3" fill="none" stroke="currentColor" stroke-width="1.5"/>
+    <path d="M17 5h3v2a3 3 0 0 1-3 3" fill="none" stroke="currentColor" stroke-width="1.5"/>
+    <path d="M12 13v3" stroke="currentColor" stroke-width="1.5"/>
+    <path d="M9 16h6l1 4H8l1-4z" fill="none" stroke="currentColor" stroke-width="1.5"/>
+    <path d="M8 20h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    <circle cx="12" cy="2.4" r="1" fill="currentColor" class="spark s1"/>
+    <circle cx="19" cy="6" r="0.8" fill="currentColor" class="spark s2"/>
+    <circle cx="5" cy="7" r="0.8" fill="currentColor" class="spark s3"/>
+  </svg>`;
+}
+function svgSkull(){
+  return `
+  <svg viewBox="0 0 24 24" class="icon-skull" aria-hidden="true">
+    <path d="M12 2a7 7 0 0 0-7 7c0 2.4 1.1 4 2.3 5.2.5.5.7 1 .7 1.6V17a1 1 0 0 0 1 1h1v2a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-2h1a1 1 0 0 0 1-1v-1.2c0-.6.2-1.1.7-1.6C17.9 13 19 11.4 19 9a7 7 0 0 0-7-7z" fill="none" stroke="currentColor" stroke-width="1.5"/>
+    <circle cx="9" cy="10" r="1.4" fill="currentColor" class="skull-eye"/>
+    <circle cx="15" cy="10" r="1.4" fill="currentColor" class="skull-eye" style="animation-delay:.3s"/>
+  </svg>`;
+}
+
+let state = {
+  screen: "themeSelect",
+  theme: null,
+  players: [],
+  newPlayerName: "",
+  monster: null,
+  monsterHP: 0,
+  monsterMaxHP: 0,
+  teamKP: 100,
+  round: 1,
+  mediumIndex: 0,
+  clue: "",
+  termPair: null,
+  targetVal: 50,
+  guessVal: 50,
+  history: [],
+  lastResult: null
+};
+
+function render(){
+  const app = document.getElementById("app");
+  const subtitle = state.theme ? currentTheme().tagline : "Wähle dein Thema";
+  app.innerHTML = `
+    <div class="brand">
+      <div class="title">WAVELENGTH</div>
+      <div class="sub">${subtitle}</div>
+      <div class="rule"></div>
+    </div>
+    ${screens[state.screen]()}
+  `;
+}
+
+function clamp(v,min,max){return Math.max(min,Math.min(max,v));}
+
+function randInt(min,max){return Math.floor(Math.random()*(max-min+1))+min;}
+
+const screens = {
+
+  themeSelect(){
+    const cards = Object.values(THEMES).map(t=>`
+      <div class="monster-card theme-card ${state.theme===t.id ? 'selected':''}" onclick="selectTheme('${t.id}')">
+        <div class="avatar m-hard">${t.iconKind==='ball' ? svgBall() : svgCyberNode()}</div>
+        <div class="m-info">
+          <div class="m-name">${t.name}</div>
+          <div class="m-desc">${t.desc}</div>
+        </div>
+      </div>
+    `).join("");
+    return `
+      <div class="panel">
+        <label>Thema wählen</label>
+        ${cards}
+        <button class="btn magenta" style="margin-top:8px;" ${!state.theme?"disabled":""} onclick="state.screen='setup'; render();">Weiter zur Aufstellung →</button>
+      </div>
+    `;
+  },
+
+  setup(){
+    const rosterRows = state.players.map((p,i)=>`
+      <div class="row roster-row">
+        <div class="roster-chip">${escapeHtml(p)}</div>
+        <button class="icon-btn" onclick="removePlayer(${i})">${svgCross()}</button>
+      </div>
+    `).join("");
+    const count = state.players.length;
+    return `
+      <div class="panel">
+        <div class="subpanel">
+          <label>Spieler erfassen</label>
+          <div class="row">
+            <input type="text" id="newPlayerInput" maxlength="16" placeholder="Name eingeben"
+              value="${escapeHtml(state.newPlayerName)}"
+              oninput="state.newPlayerName=this.value"
+              onkeydown="if(event.key==='Enter'){addPlayer();}">
+            <button class="icon-btn" onclick="addPlayer()">${svgPlus()}</button>
+          </div>
+          ${count>0 ? `<div class="roster-list">${rosterRows}</div>` : ``}
+        </div>
+        <div class="hint">${count}/8 Spieler · mindestens 2 nötig, um den Bosskampf zu starten. Reihum übernimmt jeweils ein Spieler die Rolle des Mediums.</div>
+        <button class="btn magenta" style="margin-top:16px;" ${count<2?"disabled":""} onclick="goToMonsterSelect()">Weiter zur Gegnerwahl →</button>
+        <button class="btn ghost" style="margin-top:10px;" onclick="state.screen='themeSelect'; render();">← Thema wechseln</button>
+      </div>
+    `;
+  },
+
+  monsterSelect(){
+    const cards = currentTheme().monsters.map(m=>`
+      <div class="monster-card ${state.monster && state.monster.id===m.id ? 'selected':''}" onclick="selectMonster('${m.id}')">
+        <div class="avatar ${m.cls}">${svgMonsterFace(m.cls.replace('m-',''))}</div>
+        <div class="m-info">
+          <div class="m-name">${m.name}</div>
+          <div class="m-diff diff-${m.diff}">${m.diff} · ${m.hp} HP</div>
+          <div class="m-desc">${m.desc}</div>
+        </div>
+      </div>
+    `).join("");
+    return `
+      <div class="panel">
+        <h3 style="margin-bottom:12px;">Gegner wählen</h3>
+        ${cards}
+        <button class="btn magenta" style="margin-top:8px;" ${!state.monster?"disabled":""} onclick="startBattle()">Bosskampf starten ${svgBolt()}</button>
+        <button class="btn ghost" style="margin-top:10px;" onclick="state.screen='setup'; render();">← Zurück</button>
+      </div>
+    `;
+  },
+
+  announce(){
+    const medium = state.players[state.mediumIndex];
+    return `
+      ${hud()}
+      <div class="panel secret-lock">
+        <div class="glyph">${svgLock()}</div>
+        <h3>Medium an der Reihe</h3>
+        <p><strong>${escapeHtml(medium)}</strong> ist diese Runde das Medium.</p>
+        <p class="small-dim">Alle anderen schauen kurz weg. Nur ${escapeHtml(medium)} tippt jetzt auf „Frequenz aufdecken“, um das Ziel zu sehen.</p>
+        <button class="btn magenta" style="margin-top:14px;" onclick="revealFrequency()">Frequenz aufdecken</button>
+      </div>
+    `;
+  },
+
+  sender(){
+    const medium = state.players[state.mediumIndex];
+    const [left,right] = state.termPair;
+    return `
+      ${hud()}
+      <div class="panel">
+        <span class="medium-tag">${svgLock()} Geheim-Phase</span>
+        <h3>Ziel aufgedeckt</h3>
+        <p class="small-dim">${escapeHtml(medium)}, formuliere jetzt deinen Hinweis. Reiche das Gerät erst weiter, wenn er eingetragen ist — der Zielwert bleibt danach für alle anderen verborgen.</p>
+        <div class="terms"><span class="left">${left}</span><span class="right">${right}</span></div>
+        <div class="freq-grid">
+          <div class="target-zone" style="left:${clamp(state.targetVal-4,0,96)}%; width:8%;"></div>
+        </div>
+        <label>Dein Hinweis für das Team</label>
+        <input type="text" id="clueInput" placeholder="z.B. „Ein ruhiger Sonntagmorgen“" value="${escapeHtml(state.clue)}" oninput="state.clue=this.value">
+        <button class="btn" style="margin-top:16px;" onclick="submitClue()">Hinweis versiegeln & Gerät weitergeben →</button>
+      </div>
+    `;
+  },
+
+  passDevice(){
+    return `
+      ${hud()}
+      <div class="panel secret-lock">
+        <div class="glyph">${svgSatellite()}</div>
+        <h3>Frequenz gesperrt</h3>
+        <p>${escapeHtml(state.players[state.mediumIndex])} hat das Ziel verschlüsselt. Gebt das Gerät an das restliche Team weiter.</p>
+        <button class="btn magenta" style="margin-top:14px;" onclick="state.screen='calibration'; render();">Team ist bereit — Kalibrierung starten</button>
+      </div>
+    `;
+  },
+
+  calibration(){
+    const [left,right] = state.termPair;
+    return `
+      ${hud()}
+      <div class="panel">
+        <h3>Kalibrierungs-Phase</h3>
+        <p class="small-dim">Stellt gemeinsam die Frequenz nach dem Hinweis ein.</p>
+        <div class="clue-box"><span class="label">Hinweis</span>${escapeHtml(state.clue) || "—"}</div>
+        <div class="terms"><span class="left">${left}</span><span class="right">${right}</span></div>
+        <div class="freq-grid" id="calGrid">
+          <div class="guess-marker" style="left:${state.guessVal}%;"></div>
+        </div>
+        <input type="range" min="0" max="100" value="${state.guessVal}" oninput="updateGuess(this.value)">
+        <button class="btn magenta" style="margin-top:16px;" onclick="resolveRound()">${svgTarget()}Schuss abfeuern</button>
+      </div>
+    `;
+  },
+
+  resolution(){
+    const r = state.lastResult;
+    const fxClass = {critical:"fx-critical", direct:"fx-direct", graze:"fx-graze", miss:"fx-miss"}[r.zone];
+    const fxLabel = {critical:"KRITISCHER TREFFER", direct:"DIREKTTREFFER", graze:"STREIFSCHUSS", miss:"FEHLSCHUSS"}[r.zone];
+    const [left,right] = state.termPair;
+    return `
+      ${hud()}
+      <div class="panel">
+        <h3>Auflösung</h3>
+        <div class="terms"><span class="left">${left}</span><span class="right">${right}</span></div>
+        <div class="freq-grid">
+          <div class="target-zone" style="left:${clamp(r.target-4,0,96)}%; width:8%;"></div>
+          <div class="guess-marker" style="left:${r.guess}%; background:${r.zone==='miss' ? 'var(--danger)':'var(--cyan)'}; box-shadow:0 0 8px currentColor;"></div>
+        </div>
+        <div class="feedback">
+          <div class="fx ${fxClass}">${fxLabel}</div>
+          <div class="dmg">${r.zone==='miss'
+            ? `Team verliert ${r.kpLoss} KP`
+            : `${r.dmg} Schaden am Boss`}</div>
+          <div class="small-dim" style="margin-top:6px;">Ziel: ${r.target}% · Schätzung: ${r.guess}% · Abweichung: ${r.diff}</div>
+        </div>
+        <button class="btn" style="margin-top:10px;" onclick="nextRound()">Weiter →</button>
+      </div>
+      ${historyBlock()}
+    `;
+  },
+
+  victory(){
+    return `
+      <div class="panel endscreen">
+        <div class="glyph">${svgTrophy()}</div>
+        <h2 style="color:var(--green); text-shadow:0 0 16px var(--green);">BOSS BESIEGT</h2>
+        <p class="small-dim" style="margin-top:8px;">${state.monster.name} wurde nach ${state.round} Runde(n) deaktiviert.</p>
+        <button class="btn magenta" style="margin-top:18px;" onclick="resetGame()">Neuer Kampf</button>
+      </div>
+      ${historyBlock()}
+    `;
+  },
+
+  defeat(){
+    return `
+      <div class="panel endscreen">
+        <div class="glyph">${svgSkull()}</div>
+        <h2 style="color:var(--danger); text-shadow:0 0 16px var(--danger);">TEAM DEAKTIVIERT</h2>
+        <p class="small-dim" style="margin-top:8px;">${state.monster.name} hat euer KP nach ${state.round} Runde(n) auf null gebracht.</p>
+        <button class="btn magenta" style="margin-top:18px;" onclick="resetGame()">Erneut versuchen</button>
+      </div>
+      ${historyBlock()}
+    `;
+  }
+};
+
+function hud(){
+  const hpPct = Math.round((state.monsterHP/state.monsterMaxHP)*100);
+  const kpPct = clamp(state.teamKP,0,100);
+  return `
+    <div class="panel">
+      <div class="hud">
+        <div class="round">Runde ${state.round}</div>
+        <div class="round">Medium: ${escapeHtml(state.players[state.mediumIndex])}</div>
+      </div>
+      <div class="boss-box">
+        <div class="boss-avatar ${state.monster.cls}">${svgMonsterFace(state.monster.cls.replace('m-',''))}</div>
+        <div class="boss-name">${state.monster.name}</div>
+      </div>
+      <div class="bar-wrap">
+        <div class="bar-label"><span>BOSS HP</span><span>${state.monsterHP} / ${state.monsterMaxHP}</span></div>
+        <div class="bar"><div class="bar-fill fill-hp" style="width:${hpPct}%;"></div></div>
+      </div>
+      <div class="bar-wrap" style="margin-top:8px;">
+        <div class="bar-label"><span>TEAM KP</span><span>${kpPct} / 100</span></div>
+        <div class="bar"><div class="bar-fill fill-kp" style="width:${kpPct}%;"></div></div>
+      </div>
+    </div>
+  `;
+}
+
+function historyBlock(){
+  if(state.history.length===0) return "";
+  const items = state.history.slice().reverse().map(h=>`
+    <div class="history-item">
+      <span>R${h.round} · ${escapeHtml(h.medium)}</span>
+      <span class="tag" style="color:${h.color}">${h.label}</span>
+    </div>
+  `).join("");
+  return `<div class="panel history"><h3 style="font-size:0.8rem; margin-bottom:6px;">Treffer-Historie</h3>${items}</div>`;
+}
+
+function escapeHtml(s){
+  return (s||"").replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+// --- Actions ---
+function addPlayer(){
+  const name = state.newPlayerName.trim();
+  if(name.length===0 || state.players.length>=8) return;
+  state.players.push(name);
+  state.newPlayerName = "";
+  render();
+  const input = document.getElementById("newPlayerInput");
+  if(input) input.focus();
+}
+function removePlayer(i){ state.players.splice(i,1); render(); }
+
+function selectTheme(id){
+  state.theme = id;
+  render();
+}
+
+function goToMonsterSelect(){
+  if(state.players.length<2) return;
+  state.screen = "monsterSelect";
+  render();
+}
+
+function selectMonster(id){
+  state.monster = currentTheme().monsters.find(m=>m.id===id);
+  render();
+}
+
+function startBattle(){
+  state.monsterHP = state.monster.hp;
+  state.monsterMaxHP = state.monster.hp;
+  state.teamKP = 100;
+  state.round = 1;
+  state.mediumIndex = 0;
+  state.history = [];
+  newRoundSetup();
+  state.screen = "announce";
+  render();
+}
+
+const TARGET_BANDS = [
+  [6,18],   // extrem niedrig
+  [24,38],  // eher niedrig
+  [42,58],  // Mitte
+  [62,76],  // eher hoch
+  [82,94]   // extrem hoch
+];
+function pickTargetVal(){
+  const band = TARGET_BANDS[randInt(0, TARGET_BANDS.length-1)];
+  return randInt(band[0], band[1]);
+}
+
+function newRoundSetup(){
+  state.termPair = currentTheme().termPairs[randInt(0,currentTheme().termPairs.length-1)];
+  state.targetVal = pickTargetVal();
+  state.guessVal = 50;
+  state.clue = "";
+}
+
+function revealFrequency(){
+  state.screen = "sender";
+  render();
+}
+
+function submitClue(){
+  state.screen = "passDevice";
+  render();
+}
+
+function updateGuess(v){
+  state.guessVal = parseInt(v,10);
+  const marker = document.querySelector("#calGrid .guess-marker");
+  if(marker) marker.style.left = state.guessVal + "%";
+}
+
+function resolveRound(){
+  const diff = Math.abs(state.guessVal - state.targetVal);
+  let zone, dmg=0, kpLoss=0, label, color;
+  if(diff<=4){ zone="critical"; dmg=30; label="KRITISCH"; color="var(--green)"; }
+  else if(diff<=10){ zone="direct"; dmg=20; label="DIREKT"; color="var(--cyan)"; }
+  else if(diff<=20){ zone="graze"; dmg=10; label="STREIFSCHUSS"; color="var(--amber)"; }
+  else { zone="miss"; kpLoss=15; label="FEHLSCHUSS"; color="var(--danger)"; }
+
+  state.monsterHP = clamp(state.monsterHP - dmg, 0, state.monsterMaxHP);
+  state.teamKP = clamp(state.teamKP - kpLoss, 0, 100);
+
+  state.lastResult = {target:state.targetVal, guess:state.guessVal, diff, zone, dmg, kpLoss};
+  state.history.push({round:state.round, medium:state.players[state.mediumIndex], label, color});
+  state.screen = "resolution";
+  render();
+}
+
+function nextRound(){
+  if(state.monsterHP<=0){ state.screen="victory"; render(); return; }
+  if(state.teamKP<=0){ state.screen="defeat"; render(); return; }
+  state.round++;
+  state.mediumIndex = (state.mediumIndex+1) % state.players.length;
+  newRoundSetup();
+  state.screen = "announce";
+  render();
+}
+
+function resetGame(){
+  const keepPlayers = state.players.length ? state.players : [];
+  const keepTheme = state.theme;
+  state = {
+    screen:"monsterSelect", theme:keepTheme, players: keepPlayers, newPlayerName:"",
+    monster:null, monsterHP:0, monsterMaxHP:0, teamKP:100, round:1,
+    mediumIndex:0, clue:"", termPair:null, targetVal:50, guessVal:50,
+    history:[], lastResult:null
+  };
+  render();
+}
+
+render();
+</script>
+</body>
+</html>
